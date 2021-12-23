@@ -7,9 +7,9 @@ def main():
     ## создание таблицы works
     con = sqlite3.connect('works.sqlite')
     cursor = con.cursor()
-    cursor.execute('drop table if exists works')
+    cursor.execute('DROP TABLE if EXISTS works')
     cursor.execute(
-        'create table if not exists works (ID INTEGER PRIMARY KEY AUTOINCREMENT, salary INTEGER, educationType TEXT,'
+        'CREATE TABLE if NOT EXISTS works (ID INTEGER PRIMARY KEY AUTOINCREMENT, salary INTEGER, educationType TEXT,'
         'jobTitle TEXT, qualification TEXT, gender TEXT, dateModify TEXT,skills TEXT,otherInfo TEXT)')
     print(cursor.execute('pragma table_info(works)').fetchall())
     print()
@@ -17,18 +17,18 @@ def main():
     ## добавление данных в works
     df = pd.read_csv("works.csv")
     df.to_sql("works", con, if_exists='append', index=False)
-    print(cursor.execute('select * from works limit 3').fetchall())
+    print(cursor.execute('SELECT * FROM works limit 3').fetchall())
     print()
 
     ## создание таблицы гендера
-    cursor.execute("create table if not exists genders (ID INTEGER PRIMARY KEY AUTOINCREMENT, gender TEXT)")
-    cursor.execute('insert into genders(gender) select distinct gender from works where gender is not null')
+    cursor.execute("CREATE TABLE if NOT EXISTS genders (ID INTEGER PRIMARY KEY AUTOINCREMENT, gender TEXT)")
+    cursor.execute('INSERT INTO genders(gender) SELECT DISTINCT gender FROM works WHERE gender IS NOT NULL')
     print(cursor.execute('pragma table_info(genders)').fetchall())
     print(cursor.execute("SELECT * FROM genders").fetchall())
     print()
 
     ## связь гендера и воркс через гендер_id
-    cursor.execute('alter table works add column gender_id INTEGER REFERENCES genders(ID)')
+    cursor.execute('ALTER TABLE works ADD COLUMN gender_id INTEGER REFERENCES genders(ID)')
     cursor.execute('UPDATE works SET gender_id = (SELECT ID FROM genders WHERE gender = works.gender)')
     cursor.execute('ALTER TABLE works DROP COLUMN gender')
     print(cursor.execute("pragma table_info(works)").fetchall())
@@ -36,10 +36,10 @@ def main():
     print()
 
     ## аналогичные операции с таблицей образования(создать таблицу образования, связать ее по educ_id)
-    cursor.execute("create table if not exists education (ID INTEGER PRIMARY KEY AUTOINCREMENT, educationType TEXT)")
+    cursor.execute("CREATE TABLE if NOT EXISTS education (ID INTEGER PRIMARY KEY AUTOINCREMENT, educationType TEXT)")
     cursor.execute(
-        'insert into education(educationType) select distinct educationType from works where educationType is not null')
-    cursor.execute('alter table works add column educ_id INTEGER REFERENCES education(ID)')
+        'INSERT INTO education(educationType) SELECT DISTINCT educationType FROM works WHERE educationType IS NOT NULL')
+    cursor.execute('ALTER TABLE works ADD COLUMN educ_id INTEGER REFERENCES education(ID)')
     cursor.execute('UPDATE works SET educ_id = (SELECT ID FROM education WHERE educationType = works.educationType)')
     cursor.execute('ALTER TABLE works DROP COLUMN educationType')
     print(cursor.execute("pragma table_info(works)").fetchall())
